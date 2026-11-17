@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b6e8f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bơm - PAC - Clo">
+<title>Bơm - PAC - Clo</title>
+<style>
+  :root{
+    --bg:#f2f5f7; --card:#ffffff; --ink:#12222e; --muted:#5d6f7c; --line:#d9e1e7;
+    --accent:#0b6e8f; --accent-ink:#ffffff; --soft:#e3f1f6; --warn:#a24b00; --warn-bg:#fff1dc;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0e161c; --card:#17232c; --ink:#e8eff3; --muted:#9bb0bd; --line:#2a3b47;
+      --accent:#4fb6d6; --accent-ink:#06222c; --soft:#12303b; --warn:#ffc27a; --warn-bg:#3a2a12; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+  main{max-width:460px;margin:0 auto;padding:10px 10px 28px}
+  .tabs{display:flex;gap:6px;margin-bottom:10px}
+  .tabs button{flex:1;font:inherit;font-weight:600;padding:9px 0;border-radius:10px;border:1px solid var(--line);
+    background:var(--card);color:var(--muted);cursor:pointer;touch-action:manipulation}
+  .tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px}
+  .f{display:grid;grid-template-columns:1fr 40px 96px 40px;gap:6px;align-items:center;margin-bottom:8px}
+  .f:last-child{margin-bottom:0}
+  .f label{font-size:14px;color:var(--muted);line-height:1.25}
+  .f label b{display:block;color:var(--ink);font-weight:600}
+  .f.nostep{grid-template-columns:1fr 96px}
+  .f.time{grid-template-columns:1fr 150px}
+  input{width:100%;min-width:0;font:inherit;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;
+    color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:7px 8px;text-align:right}
+  input:focus{outline:2px solid var(--accent);outline-offset:1px}
+  button.step{height:40px;font-size:22px;line-height:1;border:1px solid var(--line);border-radius:9px;
+    background:var(--card);color:var(--ink);cursor:pointer;touch-action:manipulation;padding:0}
+  button.step:active{background:var(--soft)}
+  .result{background:var(--accent);color:var(--accent-ink);border:none;text-align:center;padding:12px 10px}
+  .result .cap{font-size:13px;opacity:.92}
+  .result .big{font-size:50px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+  .result .big small{font-size:22px;font-weight:600}
+  .kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:14.5px;margin-top:8px}
+  .kv span:nth-child(odd){color:var(--muted)}
+  .kv span:nth-child(even){font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+  .warn{display:none;background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:8px 10px;font-size:13.5px;margin-bottom:8px}
+  .warn.on{display:block}
+  details summary{cursor:pointer;font-weight:600;font-size:14.5px}
+  details[open] summary{margin-bottom:10px}
+  details input{font-size:17px}
+  .note{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+  .note code{color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+  button.link{background:none;border:none;color:var(--accent);font:inherit;font-size:13px;padding:0;margin-top:8px;cursor:pointer;text-decoration:underline}
+  .roles{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;text-align:left;margin-top:8px;align-items:baseline}
+  .roles span:nth-child(odd){font-size:14px;opacity:.92}
+  .roles span:nth-child(even){font-size:26px;font-weight:700;text-align:right}
+  .rules{margin:0;padding-left:18px;font-size:13.5px;color:var(--muted)}
+  .rules li{margin-bottom:3px}
+  .rules b{color:var(--ink)}
+  h2{font-size:14.5px;margin:0 0 6px}
+  table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+  th,td{padding:6px 4px;text-align:center;border-bottom:1px solid var(--line)}
+  th{font-size:12px;color:var(--muted);font-weight:500}
+  td:first-child,th:first-child{text-align:left;white-space:nowrap}
+  tr.cur td{background:var(--soft);font-weight:700}
+  input[type=date]{font-size:16px;text-align:left}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" id="tab-bom" data-tab="bom" aria-selected="true">Bơm</button>
+    <button type="button" role="tab" id="tab-pac" data-tab="pac" aria-selected="false">PAC</button>
+    <button type="button" role="tab" id="tab-clo" data-tab="clo" aria-selected="false">Clo</button>
+  </div>
+
+  <!-- ===================== BƠM ===================== -->
+  <section id="p-bom" role="tabpanel" aria-labelledby="tab-bom">
+    <div class="card result" aria-live="polite" style="text-align:left">
+      <div class="cap">Bơm nước sạch hôm nay · <span id="b-date">–</span></div>
+      <div class="roles">
+        <span>Bơm chính</span><span id="b-main">–</span>
+        <span>Bơm phụ</span><span id="b-sub">–</span>
+        <span>Bơm nghỉ</span><span id="b-rest">–</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <ul class="rules">
+        <li><b>3h30 sáng:</b> khởi động bơm chính, sau đó bơm phụ.</li>
+        <li><b>Tối, khi giảm còn 1 bơm:</b> dừng bơm chính, bơm phụ chạy tiếp.</li>
+        <li><b>23h:</b> dừng bơm phụ. Trạm nghỉ đến 3h30 sáng.</li>
+        <li><b>Bơm nghỉ:</b> chỉ chạy thêm khi cao điểm chiều thiếu áp.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Lịch 14 ngày tới</h2>
+      <table>
+        <thead><tr><th>Ngày</th><th>Chính</th><th>Phụ</th><th>Nghỉ</th></tr></thead>
+        <tbody id="b-tb"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <details>
+        <summary>Ngày mốc</summary>
+        <div class="f time"><label for="ba"><b>Ngày mốc</b>bơm 1 làm bơm chính</label><input id="ba" type="date"></div>
+        <p class="note">Lịch đổi sang ngày mới lúc 0h. Xoay vòng 3 ngày, đếm liên tục từ ngày mốc, không tính lại theo tháng. Bơm nghỉ hôm nay làm bơm chính ngày mai; bơm chính hôm nay làm bơm phụ ngày mai. Khi sửa chữa làm lệch lịch, đổi ngày mốc sang ngày bơm 1 làm bơm chính.</p>
+        <button class="link" type="button" id="b-reset">Đặt lại ngày mốc 17/11/2026</button>
+      </details>
+    </div>
+  </section>
+
+  <!-- ===================== PAC ===================== -->
+  <section id="p-pac" role="tabpanel" aria-labelledby="tab-pac" hidden>
+    <div class="card">
+      <div class="f">
+        <label for="pq"><b>Lưu lượng nước thô</b>m³/h</label>
+        <button class="step" type="button" data-for="pq" data-d="-10" aria-label="Giảm">−</button>
+        <input id="pq" inputmode="decimal" autocomplete="off">
+        <button class="step" type="button" data-for="pq" data-d="10" aria-label="Tăng">+</button>
+      </div>
+      <div class="f">
+        <label for="pd"><b>Liều PAC</b>ppm (mg/L)</label>
+        <button class="step" type="button" data-for="pd" data-d="-1" aria-label="Giảm">−</button>
+        <input id="pd" inputmode="decimal" autocomplete="off">
+        <button class="step" type="button" data-for="pd" data-d="1" aria-label="Tăng">+</button>
+      </div>
+    </div>
+
+    <div class="card result" aria-live="polite">
+      <div class="cap">Mức vặn bơm PAC</div>
+      <div class="big"><span id="p-pct">–</span><small> %</small></div>
+      <div class="cap" id="p-sub"></div>
+    </div>
+    <div class="warn" id="p-warn"></div>
+
+    <div class="card">
+      <div class="f">
+        <label for="pv"><b>Còn trong bồn</b>lít dung dịch</label>
+        <button class="step" type="button" data-for="pv" data-d="-100" aria-label="Giảm">−</button>
+        <input id="pv" inputmode="decimal" autocomplete="off">
+        <button class="step" type="button" data-for="pv" data-d="100" aria-label="Tăng">+</button>
+      </div>
+      <div class="kv">
+        <span>Còn chạy được</span><span id="p-left">–</span>
+        <span>Dự kiến hết bồn</span><span id="p-end">–</span>
+        <span>PAC tiêu thụ</span><span id="p-kg">–</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <details>
+        <summary>Thông số pha và bơm</summary>
+        <div class="f nostep"><label for="pm"><b>PAC pha mỗi bồn</b>kg</label><input id="pm" inputmode="decimal" autocomplete="off"></div>
+        <div class="f nostep"><label for="pt"><b>Thể tích dung dịch khi pha</b>lít</label><input id="pt" inputmode="decimal" autocomplete="off"></div>
+        <div class="f nostep"><label for="pp"><b>Lưu lượng bơm ở 100%</b>L/h, đo thực tế</label><input id="pp" inputmode="decimal" autocomplete="off"></div>
+        <div class="kv">
+          <span>Nồng độ dung dịch C</span><span id="p-c">–</span>
+          <span>Hệ số chia tương đương</span><span id="p-k">–</span>
+        </div>
+        <p class="note"><code>q (L/h) = Q × ppm ÷ C (g/L)</code><br><code>Mức vặn (%) = q ÷ lưu lượng bơm ở 100% × 100</code><br><code>C = kg PAC × 1000 ÷ lít dung dịch</code></p>
+        <button class="link" type="button" data-reset="pm,pt,pp">Đặt lại thông số mặc định</button>
+      </details>
+    </div>
+  </section>
+
+  <!-- ===================== CLO ===================== -->
+  <section id="p-clo" role="tabpanel" aria-labelledby="tab-clo" hidden>
+    <div class="card">
+      <div class="f">
+        <label for="cq"><b>Lưu lượng nước xử lý</b>m³/h</label>
+        <button class="step" type="button" data-for="cq" data-d="-10" aria-label="Giảm">−</button>
+        <input id="cq" inputmode="decimal" autocomplete="off">
+        <button class="step" type="button" data-for="cq" data-d="10" aria-label="Tăng">+</button>
+      </div>
+      <div class="f">
+        <label for="cd"><b>Liều Clo</b>mg/L (g/m³)</label>
+        <button class="step" type="button" data-for="cd" data-d="-0.1" aria-label="Giảm">−</button>
+        <input id="cd" inputmode="decimal" autocomplete="off">
+        <button class="step" type="button" data-for="cd" data-d="0.1" aria-label="Tăng">+</button>
+      </div>
+    </div>
+
+    <div class="card result" aria-live="polite">
+      <div class="cap">Mức đặt lưu lượng kế Clo</div>
+      <div class="big"><span id="c-gh">–</span><small> g/h</small></div>
+      <div class="cap" id="c-sub"></div>
+    </div>
+    <div class="warn" id="c-warn"></div>
+
+    <div class="card">
+      <div class="f time"><label for="cs"><b>Giờ bắt đầu chạy</b></label><input id="cs" type="time"></div>
+      <div class="f time"><label for="ce"><b>Giờ kết thúc</b></label><input id="ce" type="time"></div>
+      <div class="kv">
+        <span>Số giờ chạy</span><span id="c-hrs">–</span>
+        <span>Clo dùng trong ca</span><span id="c-shift">–</span>
+        <span>Clo nếu chạy 24 giờ</span><span id="c-day">–</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <details>
+        <summary>Thông số máy châm</summary>
+        <div class="f nostep"><label for="cm"><b>Thang đo tối đa của máy châm</b>kg/h</label><input id="cm" inputmode="decimal" autocomplete="off"></div>
+        <p class="note"><code>Clo (g/h) = Q (m³/h) × liều (mg/L)</code><br><code>Clo trong ca (kg) = g/h × số giờ chạy ÷ 1000</code></p>
+        <button class="link" type="button" data-reset="cm">Đặt lại thông số mặc định</button>
+      </details>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  /* ====== GIÁ TRỊ MẶC ĐỊNH — sửa tại đây khi đã kiểm tra lại số thực tế ====== */
+  var DEF = {
+    pq: 400,   // PAC: lưu lượng nước thô, m3/h
+    pd: 14,    // PAC: liều, ppm
+    pv: 2500,  // PAC: dung dịch còn trong bồn, lít
+    pm: 50,    // PAC: kg pha mỗi bồn
+    pt: 2500,  // PAC: thể tích dung dịch khi pha, lít
+    pp: 670,   // PAC: lưu lượng bơm ở 100%, L/h (đo thực tế)
+    cq: 400,   // Clo: lưu lượng nước xử lý, m3/h
+    cd: 1.5,   // Clo: liều, mg/L
+    cm: 1      // Clo: thang đo tối đa máy châm, kg/h
+  };
+  /* ========================================================================== */
+  var TDEF = { cs: '06:00', ce: '18:00' };   // Clo: giờ bắt đầu, giờ kết thúc ca
+  var ANCHOR = '2026-11-17';                 // Bơm: ngày mốc, bơm 1 làm bơm chính
+  var ROLES = [[1,2,3],[3,1,2],[2,3,1]];     // [chính, phụ, nghỉ] cho Ngày 1, 2, 3 của chu kỳ
+  var KEY = 'cham-hoa-chat-v1';
+  var ids = Object.keys(DEF), el = {};
+  function $(i){ return document.getElementById(i); }
+  ids.forEach(function(i){ el[i] = $(i); });
+  var tids = Object.keys(TDEF);
+  tids.forEach(function(i){ el[i] = $(i); });
+  function mins(t){ var m = /^(\d{1,2}):(\d{2})/.exec(String(t)); return m ? (+m[1]) * 60 + (+m[2]) : NaN; }
+
+  function num(s){
+    var v = parseFloat(String(s).trim().replace(/\s/g,'').replace(',', '.'));
+    return isFinite(v) ? v : NaN;
+  }
+  function fmt(v, d){ return v.toLocaleString('vi-VN', {minimumFractionDigits:d, maximumFractionDigits:d}); }
+  function plain(v){ return String(Math.round(v*100)/100).replace('.', ','); }
+  function val(i){ return num(el[i].value); }
+
+  var tab = 'bom';
+  el.ba = $('ba');
+  function dnum(t){ var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(t)); return m ? Math.round(Date.UTC(+m[1], +m[2] - 1, +m[3]) / 86400000) : NaN; }
+  function load(){
+    var s = {};
+    try { s = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e){}
+    ids.forEach(function(i){
+      el[i].value = plain((typeof s[i] === 'number' && isFinite(s[i])) ? s[i] : DEF[i]);
+    });
+    tids.forEach(function(i){ el[i].value = (typeof s[i] === 'string' && !isNaN(mins(s[i]))) ? s[i] : TDEF[i]; });
+    el.ba.value = (typeof s.ba === 'string' && !isNaN(dnum(s.ba))) ? s.ba : ANCHOR;
+    if(s.tab === 'clo' || s.tab === 'pac' || s.tab === 'bom') tab = s.tab;
+  }
+  function save(){
+    var s = {tab: tab};
+    ids.forEach(function(i){ var v = val(i); if(!isNaN(v)) s[i] = v; });
+    tids.forEach(function(i){ if(!isNaN(mins(el[i].value))) s[i] = el[i].value; });
+    if(!isNaN(dnum(el.ba.value))) s.ba = el.ba.value;
+    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch(e){}
+  }
+
+  function span(hours){
+    var m = Math.round(hours * 60);
+    if(m >= 48 * 60){ var h = Math.round(m / 60); return Math.floor(h / 24) + ' ngày ' + (h % 24) + ' giờ'; }
+    return Math.floor(m / 60) + ' giờ ' + (m % 60) + ' phút';
+  }
+  function when(hours){
+    var now = new Date(), end = new Date(now.getTime() + hours * 3600000);
+    var d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var d1 = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    var dd = Math.round((d1 - d0) / 86400000);
+    var hm = ('0' + end.getHours()).slice(-2) + ':' + ('0' + end.getMinutes()).slice(-2);
+    return hm + ' ' + (dd === 0 ? 'hôm nay' : dd === 1 ? 'ngày mai' :
+      ('0' + end.getDate()).slice(-2) + '/' + ('0' + (end.getMonth() + 1)).slice(-2));
+  }
+  function warn(id, msg){ var w = $(id); w.textContent = msg || ''; w.className = msg ? 'warn on' : 'warn'; }
+  function dash(list){ list.forEach(function(i){ $(i).textContent = '–'; }); }
+
+  function calcPac(){
+    var Q = val('pq'), D = val('pd'), V = val('pv'), M = val('pm'), T = val('pt'), P = val('pp');
+    var cfg = M > 0 && T > 0 && P > 0;
+    var C = cfg ? M * 1000 / T : NaN;                // g/L
+    $('p-c').textContent = cfg ? fmt(C, 1) + ' g/L' : '–';
+    $('p-k').textContent = cfg ? fmt(C * P / 100, 1) : '–';
+    if(!cfg || !(Q >= 0) || !(D >= 0)){
+      dash(['p-pct','p-left','p-end','p-kg']); $('p-sub').textContent = '';
+      warn('p-warn', cfg ? 'Kiểm tra lại lưu lượng và liều đã nhập.' : 'Kiểm tra mục Thông số pha và bơm: các số phải lớn hơn 0.');
+      return;
+    }
+    var q = Q * D / C, pct = q / P * 100, kg = Q * D / 1000;
+    $('p-pct').textContent = fmt(pct, 1);
+    $('p-sub').textContent = 'Châm ' + fmt(q, 0) + ' L/h · dung dịch ' + fmt(C, 1) + ' g/L';
+    $('p-kg').textContent = fmt(kg, 2) + ' kg/h · ' + fmt(kg * 24, 0) + ' kg/ngày';
+    warn('p-warn', pct > 100 ? 'Vượt 100%: một bơm không đủ. Pha đậm hơn hoặc chạy thêm bơm.' : '');
+    var qr = Math.min(q, P);                          // bơm không châm quá 100%
+    if(!(V >= 0) || qr <= 0){ $('p-left').textContent = qr <= 0 ? 'Không châm' : '–'; $('p-end').textContent = '–'; return; }
+    $('p-left').textContent = span(V / qr);
+    $('p-end').textContent = when(V / qr);
+  }
+
+  function calcClo(){
+    var Q = val('cq'), D = val('cd'), MX = val('cm');
+    if(!(Q >= 0) || !(D >= 0)){
+      dash(['c-gh','c-hrs','c-shift','c-day']); $('c-sub').textContent = '';
+      warn('c-warn', 'Kiểm tra lại lưu lượng và liều đã nhập.');
+      return;
+    }
+    var gh = Q * D, kgh = gh / 1000;
+    $('c-gh').textContent = fmt(gh, 0);
+    $('c-sub').textContent = fmt(kgh, 2) + ' kg/h' + (MX > 0 ? ' · ' + fmt(kgh / MX * 100, 0) + '% thang đo' : '');
+    $('c-day').textContent = fmt(kgh * 24, 1) + ' kg';
+    warn('c-warn', (MX > 0 && kgh > MX) ? 'Vượt thang đo của máy châm (' + plain(MX) + ' kg/h).' : '');
+    var a = mins(el.cs.value), b = mins(el.ce.value);
+    if(isNaN(a) || isNaN(b)){ dash(['c-hrs','c-shift']); return; }
+    var dm = b - a; if(dm < 0) dm += 1440;            // kết thúc sang ngày hôm sau
+    $('c-hrs').textContent = Math.floor(dm / 60) + ' giờ ' + (dm % 60) + ' phút' + (b < a ? ' (qua đêm)' : '');
+    $('c-shift').textContent = fmt(kgh * dm / 60, 1) + ' kg';
+  }
+
+  var DOW = ['Chủ nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+  var DOWS = ['CN','T2','T3','T4','T5','T6','T7'];
+  function z(n){ return ('0' + n).slice(-2); }
+  function calcBom(){
+    var a = dnum(el.ba.value);
+    if(isNaN(a)) a = dnum(ANCHOR);
+    var now = new Date();
+    var t0 = Math.round(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+    function roles(day){ return ROLES[(((day - a) % 3) + 3) % 3]; }
+    var r = roles(t0);
+    $('b-date').textContent = DOW[now.getDay()] + ' ' + z(now.getDate()) + '/' + z(now.getMonth() + 1);
+    $('b-main').textContent = 'Bơm ' + r[0];
+    $('b-sub').textContent = 'Bơm ' + r[1];
+    $('b-rest').textContent = 'Bơm ' + r[2];
+    var html = '';
+    for(var i = 0; i < 14; i++){
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i), x = roles(t0 + i);
+      html += '<tr' + (i === 0 ? ' class="cur"' : '') + '><td>' + DOWS[d.getDay()] + ' ' + z(d.getDate()) + '/' + z(d.getMonth() + 1) +
+              '</td><td>' + x[0] + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td></tr>';
+    }
+    $('b-tb').innerHTML = html;
+  }
+
+  function calc(){ calcBom(); calcPac(); calcClo(); }
+
+  function show(t){
+    tab = t;
+    ['bom','pac','clo'].forEach(function(n){
+      $('p-' + n).hidden = (n !== t);
+      $('tab-' + n).setAttribute('aria-selected', n === t ? 'true' : 'false');
+    });
+  }
+
+  tids.forEach(function(i){
+    el[i].addEventListener('input', function(){ calc(); save(); });
+    el[i].addEventListener('change', function(){ calc(); save(); });
+  });
+  ids.forEach(function(i){
+    el[i].addEventListener('input', function(){ calc(); save(); });
+    el[i].addEventListener('focus', function(){ try{ el[i].select(); }catch(e){} });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('button.step'), function(b){
+    b.addEventListener('click', function(){
+      var t = el[b.getAttribute('data-for')], v = num(t.value);
+      if(isNaN(v)) v = 0;
+      t.value = plain(Math.max(0, v + parseFloat(b.getAttribute('data-d'))));
+      calc(); save();
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('button[data-reset]'), function(b){
+    b.addEventListener('click', function(){
+      b.getAttribute('data-reset').split(',').forEach(function(i){ el[i].value = plain(DEF[i]); });
+      calc(); save();
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function(b){
+    b.addEventListener('click', function(){ show(b.getAttribute('data-tab')); save(); });
+  });
+
+  ['input','change'].forEach(function(ev){ el.ba.addEventListener(ev, function(){ calc(); save(); }); });
+  $('b-reset').addEventListener('click', function(){ el.ba.value = ANCHOR; calc(); save(); });
+
+  load(); show(tab); calc();
+  setInterval(calc, 60000);
+})();
+</script>
+</body>
+</html>
